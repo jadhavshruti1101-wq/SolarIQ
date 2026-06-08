@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SolarIQ — Intelligent Solar Monitoring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+
+:root {
+  --bg:        #F5F7FA;
+  --bg2:       #FFFFFF;
+  --bg3:       #EEF1F6;
+  --border:    #DDE2EA;
+  --border2:   #C8D0DC;
+  --text:      #1A202C;
+  --muted:     #64748B;
+  --muted2:    #94A3B8;
+  --amber:     #D97706;
+  --amber-dim: #FDE68A;
+  --amber-glow:rgba(217,119,6,.12);
+  --green:     #059669;
+  --green-dim: #A7F3D0;
+  --green-glow:rgba(5,150,105,.12);
+  --blue:      #2563EB;
+  --blue-dim:  #BFDBFE;
+  --blue-glow: rgba(37,99,235,.12);
+  --red:       #DC2626;
+  --red-glow:  rgba(220,38,38,.12);
+  --font:  'Syne', sans-serif;
+  --mono:  'DM Mono', monospace;
+  --r:     12px;
+  --r2:    8px;
+  --trans: .2s cubic-bezier(.4,0,.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg3); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+.page { display: none; min-height: 100vh; }
+.page.active { display: flex; flex-direction: column; }
+
+/* ── NAV ── */
+.topnav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 64px;
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { display: flex; align-items: center; gap: .6rem; font-size: 1.3rem; font-weight: 800; letter-spacing: -.5px; color: var(--text); text-decoration: none; cursor: pointer; }
+.logo-icon { width: 32px; height: 32px; background: var(--amber); clip-path: polygon(50% 0%,100% 50%,50% 100%,0% 50%); display: grid; place-items: center; font-size: .8rem; }
+.logo span { color: var(--amber); }
+.nav-links { display: flex; gap: 1rem; align-items: center; }
+.nav-link { font-size: .85rem; font-weight: 500; color: var(--muted); text-decoration: none; padding: .4rem .8rem; border-radius: var(--r2); transition: var(--trans); cursor: pointer; background: none; border: none; font-family: var(--font); }
+.nav-link:hover { color: var(--text); background: var(--bg3); }
+
+.btn { display: inline-flex; align-items: center; gap: .5rem; padding: .6rem 1.4rem; border-radius: var(--r2); font-family: var(--font); font-size: .875rem; font-weight: 600; cursor: pointer; transition: var(--trans); border: none; text-decoration: none; }
+.btn-amber { background: var(--amber); color: #FFF; box-shadow: 0 2px 8px rgba(217,119,6,.25); }
+.btn-amber:hover { background: #B45309; transform: translateY(-1px); }
+.btn-ghost { background: var(--bg3); color: var(--text); border: 1px solid var(--border2); }
+.btn-ghost:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-glow); }
+.btn-sm { padding: .45rem 1rem; font-size: .8rem; }
+.btn-full { width: 100%; justify-content: center; padding: .85rem; font-size: 1rem; }
+.btn-green { background: var(--green); color: #FFF; }
+.btn-green:hover { background: #047857; box-shadow: 0 4px 12px rgba(5,150,105,.25); }
+.btn-blue { background: var(--blue); color: #FFF; }
+.btn-blue:hover { background: #1d4ed8; }
+.btn-danger { background: var(--red); color: #fff; }
+
+/* ── LANDING ── */
+.landing-hero { flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; gap: 2rem; padding: 6rem 2rem 4rem; position: relative; overflow: hidden; background: linear-gradient(160deg, #FFFBEB 0%, #F5F7FA 60%); }
+.hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(217,119,6,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(217,119,6,.05) 1px, transparent 1px); background-size: 60px 60px; animation: grid-drift 20s linear infinite; }
+@keyframes grid-drift { from { background-position: 0 0; } to { background-position: 60px 60px; } }
+.hero-glow { position: absolute; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(ellipse, rgba(217,119,6,.08) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); animation: glow-pulse 4s ease-in-out infinite; }
+@keyframes glow-pulse { 0%,100% { opacity: 1; transform: translate(-50%,-50%) scale(1); } 50% { opacity: .5; transform: translate(-50%,-50%) scale(1.1); } }
+.hero-badge { display: inline-flex; align-items: center; gap: .5rem; background: #FFF; border: 1px solid var(--amber-dim); padding: .4rem 1rem; border-radius: 99px; font-size: .75rem; color: var(--amber); font-family: var(--mono); position: relative; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: live-blink 1.5s ease-in-out infinite; }
+@keyframes live-blink { 0%,100% { box-shadow: 0 0 6px var(--green); } 50% { box-shadow: 0 0 12px var(--green); } }
+.hero-title { font-size: clamp(2.5rem,7vw,5.5rem); font-weight: 800; line-height: 1; letter-spacing: -2px; position: relative; color: var(--text); }
+.hero-title .accent { color: var(--amber); }
+.hero-sub { font-size: 1.1rem; color: var(--muted); max-width: 520px; line-height: 1.7; position: relative; }
+.hero-cta { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative; }
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 1.5rem; padding: 4rem 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+.feature-card { background: #FFF; border: 1px solid var(--border); border-radius: var(--r); padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,.05); transition: var(--trans); }
+.feature-card:hover { border-color: var(--amber); transform: translateY(-4px); box-shadow: 0 12px 32px rgba(217,119,6,.12); }
+.feat-icon { width: 48px; height: 48px; border-radius: var(--r2); display: grid; place-items: center; font-size: 1.3rem; margin-bottom: 1.2rem; }
+.feat-icon.amber { background: #FEF3C7; border: 1px solid var(--amber-dim); }
+.feat-icon.green { background: #D1FAE5; border: 1px solid var(--green-dim); }
+.feat-icon.blue  { background: #DBEAFE; border: 1px solid var(--blue-dim); }
+.feat-icon.red   { background: #FEE2E2; border: 1px solid #FECACA; }
+.feat-title { font-size: 1.1rem; font-weight: 700; margin-bottom: .5rem; }
+.feat-desc  { font-size: .875rem; color: var(--muted); line-height: 1.6; }
+
+/* ── AUTH ── */
+.auth-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; position: relative; overflow: hidden; background: linear-gradient(160deg, #FFFBEB 0%, #F5F7FA 100%); }
+.auth-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 80% at 50% -10%, rgba(217,119,6,.07), transparent); }
+.auth-card { background: #FFF; border: 1px solid var(--border); border-radius: var(--r); padding: 2.5rem; width: 100%; max-width: 420px; box-shadow: 0 4px 24px rgba(0,0,0,.08); position: relative; }
+.auth-card h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: .4rem; }
+.auth-card .sub { color: var(--muted); font-size: .875rem; margin-bottom: 2rem; }
+.form-group { margin-bottom: 1.2rem; }
+.form-label { display: block; font-size: .8rem; font-weight: 600; color: var(--muted); margin-bottom: .5rem; letter-spacing: .05em; text-transform: uppercase; font-family: var(--mono); }
+.form-input { width: 100%; padding: .75rem 1rem; border-radius: var(--r2); background: var(--bg3); border: 1px solid var(--border2); color: var(--text); font-family: var(--font); font-size: .9rem; transition: var(--trans); outline: none; }
+.form-input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-glow); background: #FFF; }
+.form-input::placeholder { color: var(--muted2); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.auth-footer { text-align: center; margin-top: 1.5rem; font-size: .85rem; color: var(--muted); }
+.auth-footer a { color: var(--amber); text-decoration: none; cursor: pointer; font-weight: 600; }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; padding: 1rem 1.5rem; border-radius: var(--r2); font-size: .875rem; font-weight: 500; display: flex; align-items: center; gap: .6rem; transform: translateY(100px); opacity: 0; transition: var(--trans); }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: #D1FAE5; border: 1px solid var(--green-dim); color: #065F46; }
+.toast.error   { background: #FEE2E2; border: 1px solid #FECACA; color: #991B1B; }
+
+/* ── SETUP ── */
+.setup-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; background: linear-gradient(160deg, #FFFBEB 0%, #F5F7FA 100%); }
+.setup-card { background: #FFF; border: 1px solid var(--border); border-radius: var(--r); padding: 2.5rem; width: 100%; max-width: 520px; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+.setup-card h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: .4rem; }
+.setup-card .sub { color: var(--muted); font-size: .875rem; margin-bottom: 2rem; line-height: 1.5; }
+.step-indicator { display: flex; gap: .5rem; margin-bottom: 2rem; }
+.step-dot { height: 4px; flex: 1; border-radius: 99px; background: var(--border2); }
+.step-dot.done { background: var(--amber); }
+
+/* ── DASHBOARD ── */
+.dash-layout { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 64px); }
+.sidebar { width: 240px; flex-shrink: 0; background: #FFF; border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 1.5rem 1rem; gap: .4rem; overflow-y: auto; }
+.sidebar-section { font-size: .7rem; font-weight: 600; color: var(--muted2); letter-spacing: .1em; text-transform: uppercase; font-family: var(--mono); padding: .5rem .6rem; margin-top: .8rem; }
+.sidebar-item { display: flex; align-items: center; gap: .75rem; padding: .7rem .9rem; border-radius: var(--r2); cursor: pointer; transition: var(--trans); font-size: .875rem; font-weight: 500; color: var(--muted); border: 1px solid transparent; }
+.sidebar-item:hover { color: var(--text); background: var(--bg3); }
+.sidebar-item.active { color: var(--amber); background: #FEF3C7; border-color: var(--amber-dim); }
+.sidebar-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+.dash-content { flex: 1; overflow-y: auto; padding: 2rem; background: var(--bg); }
+.tab-panel { display: none; width: 100%; }
+.tab-panel.active { display: block !important; }
+
+.page-header { margin-bottom: 2rem; }
+.page-title { font-size: 1.8rem; font-weight: 800; }
+.page-sub { color: var(--muted); font-size: .875rem; margin-top: .25rem; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 1.2rem; margin-bottom: 2rem; }
+.stat-card { background: #FFF; border: 1px solid var(--border); border-radius: var(--r); padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.05); position: relative; overflow: hidden; transition: var(--trans); }
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+.stat-card.solar  { border-top: 3px solid var(--amber); }
+.stat-card.battery { border-top: 3px solid var(--green); }
+.stat-card.consumption { border-top: 3px solid var(--blue); }
+.stat-card.savings-card { border-top: 3px solid var(--green); }
+.stat-label { font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-family: var(--mono); margin-bottom: .75rem; }
+.stat-card.solar .stat-label { color: var(--amber); }
+.stat-card.battery .stat-label { color: var(--green); }
+.stat-card.consumption .stat-label { color: var(--blue); }
+.stat-card.savings-card .stat-label { color: var(--green); }
+.stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: .25rem; font-family: var(--mono); }
+.stat-unit { font-size: .85rem; font-weight: 400; color: var(--muted); margin-left: .2rem; }
+.stat-trend { font-size: .8rem; color: var(--muted); }
+.stat-icon { position: absolute; right: 1.2rem; top: 1.2rem; font-size: 1.8rem; opacity: .12; }
+
+.dash-bottom { display: grid; grid-template-columns: 1fr 320px; gap: 1.2rem; }
+@media (max-width: 900px) { .dash-bottom { grid-template-columns: 1fr; } }
+
+.card { background: #FFF; border: 1px solid var(--border); border-radius: var(--r); box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+.card-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.card-title { font-size: .95rem; font-weight: 700; }
+.card-body { padding: 1.5rem; }
+.live-badge { display: inline-flex; align-items: center; gap: .4rem; font-size: .7rem; font-family: var(--mono); color: var(--green); background: #D1FAE5; border: 1px solid var(--green-dim); padding: .2rem .6rem; border-radius: 99px; }
+
+/* Weather */
+.weather-widget { display: flex; flex-direction: column; gap: 1rem; }
+.weather-top { display: flex; align-items: center; gap: 1rem; }
+.weather-icon-wrap { width: 64px; height: 64px; flex-shrink: 0; }
+.weather-icon-wrap img { width: 100%; height: 100%; }
+.weather-temp { font-size: 2.5rem; font-weight: 800; font-family: var(--mono); line-height: 1; }
+.weather-city { font-size: 1rem; font-weight: 600; }
+.weather-desc { font-size: .8rem; color: var(--muted); text-transform: capitalize; }
+.weather-details { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.weather-detail { background: var(--bg3); border-radius: var(--r2); padding: .75rem; border: 1px solid var(--border); }
+.weather-detail .wd-label { font-size: .7rem; color: var(--muted); font-family: var(--mono); margin-bottom: .25rem; }
+.weather-detail .wd-val { font-size: .95rem; font-weight: 600; }
+
+.chart-wrap { position: relative; height: 200px; }
+
+/* Predictions */
+.predictions-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 1.2rem; }
+.pred-card { background: #FFF; border: 1px solid var(--border); border-radius: var(--r); padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.05); transition: var(--trans); }
+.pred-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+.pred-title { font-size: .8rem; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1rem; }
+.pred-value { font-size: 2.5rem; font-weight: 800; font-family: var(--mono); }
+.pred-value.amber { color: var(--amber); }
+.pred-value.green { color: var(--green); }
+.pred-sub { font-size: .8rem; color: var(--muted); margin-top: .3rem; }
+.progress-bar { height: 6px; background: var(--border2); border-radius: 99px; margin-top: 1rem; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 99px; transition: width .6s ease; }
+.fill-amber { background: linear-gradient(90deg, #FDE68A, var(--amber)); }
+.fill-green { background: linear-gradient(90deg, #A7F3D0, var(--green)); }
+
+/* Reports */
+.reports-grid { display: grid; gap: 1.5rem; }
+.chart-card { background: #FFF; border: 1px solid var(--border); border-radius: var(--r); box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+.chart-card .chart-wrap { height: 260px; padding: 1.5rem 1.5rem 0; }
+
+/* Devices */
+.devices-top { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 1.2rem; margin-bottom: 2rem; }
+.device-card { background: #FFF; border: 1px solid var(--border); border-radius: var(--r); padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.05); transition: var(--trans); }
+.device-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+.device-status { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; }
+.status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); animation: live-blink 1.5s infinite; }
+.status-dot.warning { background: var(--amber); }
+.status-dot.offline { background: var(--red); }
+.status-txt { font-size: .75rem; font-family: var(--mono); font-weight: 600; }
+.status-txt.online { color: var(--green); }
+.device-name { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+.device-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.device-metric { background: var(--bg3); border-radius: var(--r2); padding: .6rem .8rem; border: 1px solid var(--border); }
+.dm-label { font-size: .65rem; color: var(--muted); font-family: var(--mono); }
+.dm-val { font-size: .95rem; font-weight: 600; }
+
+/* Appliances */
+.appliance-section { background: #FFF; border: 1px solid var(--border); border-radius: var(--r); box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+.appliance-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
+.appliance-list { padding: 0 1.5rem; max-height: 360px; overflow-y: auto; }
+.appliance-item { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border); transition: var(--trans); }
+.appliance-item:last-child { border-bottom: none; }
+.appliance-item:hover { background: var(--bg3); border-radius: var(--r2); padding-left: .5rem; padding-right: .5rem; }
+.app-icon { width: 40px; height: 40px; border-radius: var(--r2); background: var(--bg3); border: 1px solid var(--border); display: grid; place-items: center; font-size: 1.1rem; flex-shrink: 0; }
+.app-info { flex: 1; }
+.app-name { font-size: .9rem; font-weight: 600; }
+.app-meta { font-size: .75rem; color: var(--muted); font-family: var(--mono); }
+.app-watt { font-size: .9rem; font-weight: 700; font-family: var(--mono); }
+.app-watt.active { color: var(--amber); }
+.app-watt.inactive { color: var(--muted2); }
+
+.toggle-switch { position: relative; width: 40px; height: 22px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-track { position: absolute; inset: 0; border-radius: 99px; background: var(--border2); cursor: pointer; transition: var(--trans); }
+.toggle-switch input:checked + .toggle-track { background: var(--green); }
+.toggle-thumb { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: var(--trans); pointer-events: none; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.toggle-switch input:checked ~ .toggle-thumb { transform: translateX(18px); }
+
+.btn-icon { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--border2); border-radius: var(--r2); background: var(--bg3); cursor: pointer; transition: var(--trans); font-size: .8rem; }
+.btn-icon:hover { border-color: var(--red); color: var(--red); background: #FEE2E2; }
+
+.savings-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 1rem; padding: 1.5rem; background: #FFF; border: 1px solid var(--border); border-radius: var(--r); margin-top: 1.2rem; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+.saving-item { text-align: center; }
+.saving-val { font-size: 2rem; font-weight: 800; font-family: var(--mono); }
+.saving-val.amber { color: var(--amber); }
+.saving-val.green { color: var(--green); }
+.saving-val.blue  { color: var(--blue); }
+.saving-label { font-size: .75rem; color: var(--muted); font-family: var(--mono); margin-top: .25rem; }
+
+/* Settings */
+.settings-wrapper { padding: 1rem; max-width: 1000px; }
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+.settings-card { background: #fff; padding: 1.5rem; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,.1); transition: var(--trans); }
+.settings-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+.settings-card h3 { margin-top: 0; font-size: 1.1rem; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: .75rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; }
+.setting-item { margin-bottom: 1rem; }
+.setting-item label { display: block; font-size: .85rem; font-weight: 600; color: #64748b; margin-bottom: .5rem; text-transform: uppercase; }
+.setting-item input, .setting-item select { width: 100%; padding: .6rem; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; color: #334155; transition: var(--trans); outline: none; }
+.setting-item input:focus, .setting-item select:focus { border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-glow); }
+.btn-save-settings { background: #f59e0b; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: var(--trans); font-family: var(--font); font-size: .9rem; }
+.btn-save-settings:hover { transform: translateY(-2px); background: #d97706; box-shadow: 0 4px 12px rgba(217,119,6,.3); }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.3); display: none; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(4px); }
+.modal-overlay.open { display: flex; }
+.modal { background: #FFF; border: 1px solid var(--border); border-radius: var(--r); padding: 2rem; width: 100%; max-width: 440px; box-shadow: 0 16px 48px rgba(0,0,0,.15); animation: modal-in .2s ease; }
+@keyframes modal-in { from { opacity:0; transform: scale(.95) translateY(10px); } to { opacity:1; transform: scale(1) translateY(0); } }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.modal-title { font-size: 1.1rem; font-weight: 700; }
+.modal-close { width: 32px; height: 32px; display: grid; place-items: center; cursor: pointer; color: var(--muted); border-radius: var(--r2); transition: var(--trans); font-size: 1.1rem; border: none; background: none; }
+.modal-close:hover { color: var(--text); background: var(--bg3); }
+
+.empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+.empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+.empty-state p { font-size: .9rem; }
+
+.tag { display: inline-block; padding: .2rem .6rem; border-radius: 99px; font-size: .7rem; font-family: var(--mono); }
+.tag.amber { background: #FEF3C7; color: #92400E; border: 1px solid var(--amber-dim); }
+.tag.green { background: #D1FAE5; color: #065F46; border: 1px solid var(--green-dim); }
+.tag.blue  { background: #DBEAFE; color: #1E40AF; border: 1px solid var(--blue-dim); }
+
+/* AI Hint */
+#smart-ai-hint { background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; transition: border-color .3s ease; }
+
+.trend-up   { color: var(--green); font-weight: 600; }
+.trend-down { color: var(--red);   font-weight: 600; }
+
+select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%2364748B' stroke-width='2' d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; padding-right: 2.5rem; }
+
+@keyframes count-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.count-anim { animation: count-up .4s ease; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { position: fixed !important; top: 0; left: -280px; width: 280px; height: 100vh; z-index: 9999; background: #FFF !important; transition: all 0.3s ease-in-out; box-shadow: 4px 0 16px rgba(0,0,0,.1); display: block !important; }
+  .sidebar.show { left: 0 !important; }
+  .dash-content { padding: 1rem; }
+  .form-row { grid-template-columns: 1fr; }
+  .features-grid { padding: 2rem 1rem; }
+  .topnav { padding: 0 1rem; }
+}
+.menu-btn { display: none; width: 36px; height: 36px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r2); cursor: pointer; color: var(--text); font-size: 1rem; align-items: center; justify-content: center; }
+@media (max-width: 768px) { .menu-btn { display: flex; } }
+
+/* ── CO2 Tracker ── */
+.co2-banner { background: linear-gradient(135deg, #d1fae5, #a7f3d0); border: 1px solid var(--green-dim); border-radius: var(--r); padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.co2-text { font-size: .85rem; color: #065f46; font-weight: 600; }
+.co2-val { font-size: 1.4rem; font-weight: 800; color: var(--green); font-family: var(--mono); }
+
+/* ── Download Btn ── */
+.download-btn-wrap { display: flex; gap: .8rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+
+/* ── Print / PDF hidden elements ── */
+@media print {
+  body * { visibility: hidden !important; }
+  #print-region, #print-region * { visibility: visible !important; }
+  #print-region { position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; background: #fff !important; padding: 2rem !important; }
+}
+
+/* ── Bill Print Region ── */
+#bill-print-region { display: none; }
+@media print {
+  #bill-print-region { display: block !important; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ LANDING ══ -->
+<div class="page" id="page-landing">
+  <nav class="topnav">
+    <a class="logo" onclick="navigate('landing')"><div class="logo-icon">⚡</div>Solar<span>IQ</span></a>
+    <div class="nav-links">
+      <button class="nav-link" onclick="navigate('login')">Sign In</button>
+      <button class="btn btn-amber btn-sm" onclick="navigate('signup')">Get Started</button>
+    </div>
+  </nav>
+  <section class="landing-hero">
+    <div class="hero-grid"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-badge"><span class="live-dot"></span> Real-Time Monitoring Active</div>
+    <h1 class="hero-title">Intelligent<br><span class="accent">Solar</span> Management</h1>
+    <p class="hero-sub">Monitor, predict, and optimize your solar energy system with AI-powered insights and real-time analytics.</p>
+    <div class="hero-cta">
+      <button class="btn btn-amber" onclick="navigate('signup')">⚡ Get Started Free</button>
+      <button class="btn btn-ghost" onclick="navigate('login')">Sign In →</button>
+    </div>
+  </section>
+  <div class="features-grid">
+    <div class="feature-card"><div class="feat-icon amber">☀️</div><div class="feat-title">Real-Time Generation</div><div class="feat-desc">Track solar production live. Know exactly how much power your panels are generating every second.</div></div>
+    <div class="feature-card"><div class="feat-icon green">🔋</div><div class="feat-title">Battery Intelligence</div><div class="feat-desc">Smart battery monitoring with charge cycles, health analytics, and discharge predictions.</div></div>
+    <div class="feature-card"><div class="feat-icon blue">📊</div><div class="feat-title">AI Predictions</div><div class="feat-desc">Machine learning models predict next-day yields using weather patterns and historical data.</div></div>
+    <div class="feature-card"><div class="feat-icon red">💰</div><div class="feat-title">Savings Engine</div><div class="feat-desc">Calculate exactly how much money your solar system saves you daily, monthly, and yearly.</div></div>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div class="page" id="page-login">
+  <nav class="topnav"><a class="logo" onclick="navigate('landing')"><div class="logo-icon">⚡</div>Solar<span>IQ</span></a></nav>
+  <div class="auth-wrap">
+    <div class="auth-bg"></div>
+    <div class="auth-card">
+      <h2>Welcome Back</h2><p class="sub">Sign in to your SolarIQ dashboard</p>
+      <div class="form-group"><label class="form-label">Email Address</label><input type="email" class="form-input" id="login-email" placeholder="you@example.com"/></div>
+      <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="login-pass" placeholder="••••••••"/></div>
+      <button class="btn btn-amber btn-full" onclick="doLogin()">Sign In →</button>
+      <div class="auth-footer">Don't have an account? <a onclick="navigate('signup')">Create one</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SIGNUP ══ -->
+<div class="page" id="page-signup">
+  <nav class="topnav"><a class="logo" onclick="navigate('landing')"><div class="logo-icon">⚡</div>Solar<span>IQ</span></a></nav>
+  <div class="auth-wrap">
+    <div class="auth-bg"></div>
+    <div class="auth-card">
+      <h2>Create Account</h2><p class="sub">Join thousands of smart solar users</p>
+      <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" id="signup-name" placeholder="Alex Johnson"/></div>
+      <div class="form-group"><label class="form-label">Email Address</label><input type="email" class="form-input" id="signup-email" placeholder="you@example.com"/></div>
+      <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="signup-pass" placeholder="Min 8 characters"/></div>
+      <button class="btn btn-amber btn-full" onclick="doSignup()">Create Account ⚡</button>
+      <div class="auth-footer">Already have an account? <a onclick="navigate('login')">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD SYSTEM ══ -->
+<div class="page" id="page-add-system">
+  <nav class="topnav"><a class="logo" onclick="navigate('landing')"><div class="logo-icon">⚡</div>Solar<span>IQ</span></a></nav>
+  <div class="setup-wrap">
+    <div class="setup-card">
+      <div class="step-indicator"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot"></div></div>
+      <h2>Add Your System</h2><p class="sub">Tell us about your solar setup. We'll use your location for accurate predictions.</p>
+      <div class="form-group"><label class="form-label">System Name</label><input type="text" class="form-input" id="sys-name" placeholder="e.g. Home Rooftop System"/></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Capacity (kW)</label><input type="number" class="form-input" id="sys-capacity" placeholder="e.g. 5.5" step="0.1" min="0.1"/></div>
+        <div class="form-group"><label class="form-label">Panel Count</label><input type="number" class="form-input" id="sys-panels" placeholder="e.g. 18" min="1"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Location (City)</label><input type="text" class="form-input" id="sys-location" placeholder="e.g. Mumbai, London, New York"/></div>
+      <div class="form-group"><label class="form-label">Utility Rate (₹/kWh)</label><input type="number" class="form-input" id="sys-rate" placeholder="8.50" step="0.01" value="8.50"/></div>
+      <button class="btn btn-amber btn-full" onclick="doAddSystem()">Save & Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD APPLIANCES ══ -->
+<div class="page" id="page-add-appliances">
+  <nav class="topnav"><a class="logo" onclick="navigate('landing')"><div class="logo-icon">⚡</div>Solar<span>IQ</span></a></nav>
+  <div class="setup-wrap">
+    <div class="setup-card" style="max-width:560px">
+      <div class="step-indicator"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div></div>
+      <h2>Home Appliances</h2><p class="sub">Add your main appliances to calculate real consumption and savings.</p>
+      <div id="onboard-appliances"></div>
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:1.2rem;margin-bottom:1.2rem;">
+        <p style="font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:1rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;">Quick Add</p>
+        <div class="form-group">
+          <label class="form-label">Select Appliance</label>
+          <select class="form-input" id="oa-preset" onchange="updateOnboardWatts()" style="cursor:pointer;">
+            <option value="">-- Choose Appliance --</option>
+            <optgroup label="Kitchen"><option value="150">Refrigerator</option><option value="1200">Microwave</option><option value="1500">Electric Kettle</option></optgroup>
+            <optgroup label="Climate"><option value="2000">Air Conditioner</option><option value="75">Ceiling Fan</option><option value="1500">Room Heater</option></optgroup>
+            <optgroup label="Tech"><option value="60">Smart TV</option><option value="500">Gaming PC</option><option value="65">Laptop</option></optgroup>
+            <optgroup label="Laundry"><option value="1000">Washing Machine</option><option value="2500">Clothes Dryer</option><option value="1500">Electric Iron</option></optgroup>
+            <option value="0">Custom</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="oa-name" placeholder="Name"/></div>
+          <div class="form-group"><label class="form-label">Watts</label><input type="number" class="form-input" id="oa-watts" placeholder="150" min="1"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Hours / Day</label><input type="number" class="form-input" id="oa-hours" placeholder="8" min="0.1" max="24" step="0.5"/></div>
+        <button class="btn btn-ghost" style="width:100%" onclick="addOnboardAppliance()">+ Add Appliance</button>
+      </div>
+      <button class="btn btn-amber btn-full" onclick="finishOnboarding()">Go to Dashboard ⚡</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div class="page" id="page-dashboard">
+  <nav class="topnav">
+    <a class="logo" onclick="navigate('dashboard')"><div class="logo-icon">⚡</div>Solar<span>IQ</span></a>
+    <div style="display:flex;align-items:center;gap:.8rem">
+      <div class="live-badge"><span class="live-dot"></span> LIVE</div>
+      <span style="font-size:.85rem;color:var(--muted)" id="user-greeting"></span>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    </div>
+  </nav>
+
+  <div class="dash-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-section">Overview</div>
+      <div class="sidebar-item active" onclick="switchTab('overview',event)" data-tab="overview"><span class="icon">⚡</span> Dashboard</div>
+      <div class="sidebar-item" onclick="switchTab('predictions',event)" data-tab="predictions"><span class="icon">🔮</span> Predictions</div>
+      <div class="sidebar-item" onclick="switchTab('reports',event)" data-tab="reports"><span class="icon">📊</span> Reports</div>
+      <div class="sidebar-section">Financials</div>
+      <div class="sidebar-item" data-tab="billing" onclick="switchTab('billing',event)"><span class="icon">🧾</span> Bill Analysis</div>
+      <div class="sidebar-section">System</div>
+      <div class="sidebar-item" onclick="switchTab('devices',event)" data-tab="devices"><span class="icon">🔌</span> Devices & Appliances</div>
+      <div class="sidebar-item" onclick="switchTab('settings',event)" data-tab="settings"><span class="icon">⚙️</span> Settings</div>
+      <div style="margin-top:auto;padding-top:1rem;border-top:1px solid var(--border)">
+        <div style="font-size:.75rem;color:var(--muted);padding:.5rem .6rem;" id="system-info-sidebar"></div>
+      </div>
+    </aside>
+
+    <main class="dash-content">
+
+      <!-- OVERVIEW TAB -->
+      <div class="tab-panel active" id="tab-overview">
+        <div class="page-header">
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-sub" id="dash-timestamp">Loading...</p>
+        </div>
+
+        <div class="co2-banner">
+          <div>
+            <div style="font-size:.75rem;color:#065f46;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem;">🌿 CO₂ Avoided Today</div>
+            <div class="co2-val" id="co2-display">0.00 kg</div>
+          </div>
+          <div style="font-size:.8rem;color:#047857;max-width:200px;text-align:right;">Equivalent to <b id="trees-display">0</b> trees absorbing CO₂ for a day</div>
+        </div>
+
+        <div id="smart-ai-hint">✨ <b>AI Insight:</b> Calculating optimal energy usage window...</div>
+
+        <div class="stats-grid">
+          <div class="stat-card solar"><div class="stat-icon">☀️</div><div class="stat-label">Solar Generation</div><div class="stat-value"><span id="s-solar">0.0</span><span class="stat-unit">kW</span></div><div class="stat-trend" id="s-solar-trend"><span class="trend-up">↑ 12%</span> vs yesterday</div></div>
+          <div class="stat-card battery"><div class="stat-icon">🔋</div><div class="stat-label">Battery Level</div><div class="stat-value"><span id="s-battery">0</span><span class="stat-unit">%</span></div><div class="stat-trend" id="s-battery-trend">—</div></div>
+          <div class="stat-card consumption"><div class="stat-icon">🏠</div><div class="stat-label">House Consumption</div><div class="stat-value"><span id="s-consumption">0.0</span><span class="stat-unit">kW</span></div><div class="stat-trend" id="s-cons-trend">—</div></div>
+          <div class="stat-card savings-card"><div class="stat-icon">💰</div><div class="stat-label">Today's Savings</div><div class="stat-value" style="color:var(--green)">₹<span id="s-savings">0.00</span></div><div class="stat-trend" id="s-savings-trend">—</div></div>
+        </div>
+
+        <div class="dash-bottom">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Power Flow — Last 24h</span><span class="live-badge"><span class="live-dot"></span> LIVE</span></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="overview-chart"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">☁️ Weather</span><span class="tag amber" id="weather-uv">UV —</span></div>
+            <div class="card-body"><div class="weather-widget" id="weather-widget"><div style="color:var(--muted);font-size:.85rem">Fetching weather...</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PREDICTIONS TAB -->
+      <div class="tab-panel" id="tab-predictions">
+        <div class="page-header"><h1 class="page-title">Predictions</h1><p class="page-sub">AI-powered forecasts for tomorrow's solar performance</p></div>
+        <div class="predictions-grid">
+          <div class="pred-card"><div class="pred-title">☀️ Tomorrow's Yield</div><div class="pred-value amber" id="pred-yield">—</div><div class="pred-sub">Estimated kWh generation</div><div class="progress-bar"><div class="progress-fill fill-amber" id="pred-yield-bar" style="width:0%"></div></div></div>
+          <div class="pred-card"><div class="pred-title">💵 Projected Savings</div><div class="pred-value green" id="pred-savings">₹0</div><div class="pred-sub">Based on utility rate</div><div class="progress-bar"><div class="progress-fill fill-green" id="pred-savings-bar" style="width:0%"></div></div></div>
+          <div class="pred-card"><div class="pred-title">🌤 Solar Efficiency</div><div class="pred-value amber" id="pred-eff">—</div><div class="pred-sub">Weather-adjusted output</div><div class="progress-bar"><div class="progress-fill fill-amber" id="pred-eff-bar" style="width:0%"></div></div></div>
+          <div class="pred-card"><div class="pred-title">🔋 Peak Hours</div><div class="pred-value green" id="pred-peak">—</div><div class="pred-sub">Best generation window</div></div>
+        </div>
+        <div style="margin-top:2rem">
+          <div class="card">
+            <div class="card-header"><span class="card-title">7-Day Forecast</span></div>
+            <div class="card-body"><div class="chart-wrap" style="height:240px"><canvas id="forecast-chart"></canvas></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS TAB -->
+      <div class="tab-panel" id="tab-reports">
+        <div class="page-header">
+          <h1 class="page-title">Reports</h1>
+          <p class="page-sub">Detailed energy history and performance analytics</p>
+        </div>
+
+        <div class="download-btn-wrap">
+          <button class="btn btn-amber" onclick="downloadReportOnly()">
+            📥 Download Report (Charts Only)
+          </button>
+        </div>
+
+        <!-- This div is what gets captured as image -->
+        <div id="report-capture-region">
+          <div style="background: linear-gradient(135deg,#1A202C,#2d3748); color: white; border-radius: var(--r); padding: 1.5rem 2rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size:1.4rem;font-weight:800;">⚡ SolarIQ Energy Report</div>
+              <div style="font-size:.85rem;opacity:.7;margin-top:.3rem;" id="report-date-label">Generated on —</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:.8rem;opacity:.6;font-family:var(--mono);">SYSTEM</div>
+              <div style="font-size:1rem;font-weight:700;" id="report-sys-label">—</div>
+            </div>
+          </div>
+
+          <div class="reports-grid">
+            <div class="chart-card card">
+              <div class="card-header"><span class="card-title">⚡ Monthly Generation vs. Consumption</span></div>
+              <div class="card-body"><div class="chart-wrap" style="height:260px"><canvas id="report-chart1"></canvas></div></div>
+            </div>
+            <div class="chart-card card">
+              <div class="card-header"><span class="card-title">💰 Monthly Savings Trend</span></div>
+              <div class="card-body"><div class="chart-wrap" style="height:240px"><canvas id="report-chart2"></canvas></div></div>
+            </div>
+          </div>
+
+          <!-- Summary stats below charts -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-top:1.5rem;">
+            <div class="stat-card solar" style="text-align:center;"><div class="stat-label">Annual Yield</div><div class="stat-value" style="font-size:1.5rem;" id="rpt-annual-kwh">—</div></div>
+            <div class="stat-card battery" style="text-align:center;"><div class="stat-label">Annual Savings</div><div class="stat-value" style="font-size:1.5rem;" id="rpt-annual-savings">—</div></div>
+            <div class="stat-card" style="border-top:3px solid var(--green);text-align:center;"><div class="stat-label" style="color:var(--green)">CO₂ Avoided</div><div class="stat-value" style="font-size:1.5rem;color:var(--green);" id="rpt-co2">—</div></div>
+            <div class="stat-card consumption" style="text-align:center;"><div class="stat-label">Payback Est.</div><div class="stat-value" style="font-size:1.5rem;" id="rpt-payback">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BILLING TAB -->
+      <div id="tab-billing" class="tab-panel">
+        <div class="page-header">
+          <h2 class="page-title">Bill Analysis</h2>
+          <p class="page-sub">Compare legacy grid costs with your SolarIQ savings.</p>
+        </div>
+
+        <div class="dash-bottom" style="grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+          <div class="card">
+            <div class="card-header"><span class="card-title">🤖 AI Bill Scanner</span></div>
+            <div class="card-body">
+              <div style="border: 2px dashed var(--border2); padding: 30px; text-align: center; border-radius: var(--r); background: var(--bg2);">
+                <input type="file" id="bill-input" hidden accept="image/*" onchange="handleBillUpload(event)">
+                <div style="font-size:2rem;margin-bottom:.5rem;">📄</div>
+                <p style="margin-bottom: 15px; font-size: 0.9rem; color: var(--muted);">Scan your paper electricity bill</p>
+                <button class="btn btn-amber btn-sm" onclick="document.getElementById('bill-input').click()">Upload Bill Image</button>
+              </div>
+              <p id="ocr-status" style="font-size: 0.75rem; color: var(--amber); margin-top: 10px; text-align: center; font-family: var(--mono); min-height: 1.2em;">Ready to scan...</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">✏️ Manual Input</span></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Old Monthly Bill (₹)</label>
+                <input type="number" id="manual-old-amt" class="form-input" placeholder="e.g. 3500">
+              </div>
+              <div class="form-group">
+                <label class="form-label">System Investment (₹) <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+                <input type="number" id="investment-amt" class="form-input" placeholder="e.g. 350000">
+              </div>
+              <button class="btn btn-blue btn-full" onclick="processBillData()">⚡ Generate Comparison</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- The region that gets downloaded as the bill report -->
+        <div id="bill-capture-region" style="background:#fff; border-radius: var(--r); padding:1.5rem; border: 1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid var(--amber);">
+            <div>
+              <div style="font-size:1.3rem;font-weight:800;">⚡ SolarIQ Bill Comparison</div>
+              <div style="font-size:.8rem;color:var(--muted);font-family:var(--mono);" id="bill-date-label">—</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:.75rem;color:var(--muted);font-family:var(--mono);">LOCATION</div>
+              <div style="font-weight:700;" id="bill-loc-label">—</div>
+            </div>
+          </div>
+
+          <!-- Summary boxes -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;" id="bill-summary-boxes">
+            <div style="background:#FEF3C7;border-radius:var(--r2);padding:1rem;text-align:center;border:1px solid var(--amber-dim);">
+              <div style="font-size:.75rem;color:var(--amber);font-family:var(--mono);margin-bottom:.4rem;">OLD BILL</div>
+              <div style="font-size:1.8rem;font-weight:800;color:var(--amber);font-family:var(--mono);" id="bill-old-display">₹—</div>
+            </div>
+            <div style="background:#D1FAE5;border-radius:var(--r2);padding:1rem;text-align:center;border:1px solid var(--green-dim);">
+              <div style="font-size:.75rem;color:var(--green);font-family:var(--mono);margin-bottom:.4rem;">NEW BILL</div>
+              <div style="font-size:1.8rem;font-weight:800;color:var(--green);font-family:var(--mono);" id="bill-new-display">₹—</div>
+            </div>
+            <div style="background:#DBEAFE;border-radius:var(--r2);padding:1rem;text-align:center;border:1px solid var(--blue-dim);">
+              <div style="font-size:.75rem;color:var(--blue);font-family:var(--mono);margin-bottom:.4rem;">MONTHLY SAVING</div>
+              <div style="font-size:1.8rem;font-weight:800;color:var(--blue);font-family:var(--mono);" id="bill-saving-display">₹—</div>
+            </div>
+          </div>
+
+          <div class="dash-bottom" style="grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+            <div class="card">
+              <div class="card-header"><span class="card-title">Cost Comparison (₹/month)</span></div>
+              <div class="card-body" style="height: 220px;"><canvas id="billCostChart"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Energy Independence</span></div>
+              <div class="card-body" style="height: 220px; position:relative;">
+                <canvas id="billSplitChart"></canvas>
+                <div style="text-align:center;margin-top:.5rem;">
+                  <span id="bill-result-savings" style="font-weight:800;color:var(--green);font-size:1.3rem;font-family:var(--mono);"></span><br>
+                  <span id="bill-result-percent" style="color:var(--muted);font-size:.8rem;"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payback + annual -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem;" id="bill-extra-stats" style="display:none;">
+            <div style="background:var(--bg3);border-radius:var(--r2);padding:1rem;border:1px solid var(--border);">
+              <div style="font-size:.75rem;color:var(--muted);font-family:var(--mono);margin-bottom:.3rem;">ANNUAL SAVINGS</div>
+              <div style="font-size:1.5rem;font-weight:800;color:var(--green);font-family:var(--mono);" id="bill-annual">₹—</div>
+            </div>
+            <div style="background:var(--bg3);border-radius:var(--r2);padding:1rem;border:1px solid var(--border);">
+              <div style="font-size:.75rem;color:var(--muted);font-family:var(--mono);margin-bottom:.3rem;">PAYBACK PERIOD</div>
+              <div style="font-size:1.5rem;font-weight:800;color:var(--blue);font-family:var(--mono);" id="bill-payback">—</div>
+            </div>
+          </div>
+
+          <div style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-radius:var(--r2);padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;">
+            <div>
+              <div style="font-weight:700;color:#065f46;">80% Bill Reduction with SolarIQ</div>
+              <div style="font-size:.8rem;color:#047857;">Based on average residential solar system performance</div>
+            </div>
+            <div style="font-size:2rem;">🌿</div>
+          </div>
+        </div>
+
+        <div style="margin-top:1rem;">
+          <button class="btn btn-green" onclick="downloadBillReport()" style="gap:.5rem;">
+            📄 Download Bill Report (PNG)
+          </button>
+        </div>
+      </div>
+
+      <!-- SETTINGS TAB -->
+      <div id="tab-settings" class="tab-panel">
+        <div class="settings-wrapper">
+          <h2 style="margin-bottom:1.5rem;">System Configuration</h2>
+          <div class="settings-grid">
+            <div class="settings-card">
+              <h3>💰 Financials</h3>
+              <div class="setting-item"><label>Unit Rate (₹/kWh)</label><input type="number" id="set-rate" value="8.50" step="0.1"></div>
+              <div class="setting-item"><label>Currency Symbol</label><select id="set-currency"><option value="₹">Rupee (₹)</option><option value="$">Dollar ($)</option><option value="€">Euro (€)</option></select></div>
+            </div>
+            <div class="settings-card">
+              <h3>⚙️ Hardware</h3>
+              <div class="setting-item"><label>Solar Capacity (kW)</label><input type="number" id="set-cap" value="6.0" step="0.1"></div>
+              <div class="setting-item"><label>Battery Storage (kWh)</label><input type="number" id="set-batt-cap" value="10.0" step="0.5"></div>
+            </div>
+            <div class="settings-card">
+              <h3>🌍 Impact & Location</h3>
+              <div class="setting-item"><label>CO2 Factor (kg/kWh)</label><input type="number" id="set-co2" value="0.85" step="0.01"></div>
+              <div class="setting-item"><label>Location (City)</label><input type="text" id="set-location" value="Mumbai"></div>
+            </div>
+          </div>
+          <button class="btn-save-settings" onclick="saveAllSettings()">Apply & Sync Changes ⚡</button>
+        </div>
+      </div>
+
+      <!-- DEVICES TAB -->
+      <div class="tab-panel" id="tab-devices">
+        <div class="page-header">
+          <h1 class="page-title">Devices & Appliances</h1>
+          <p class="page-sub">Hardware monitoring and live load management</p>
+        </div>
+        <div class="devices-top" id="hardware-cards"></div>
+        <div class="savings-grid" id="savings-summary">
+          <div class="saving-item"><div class="saving-val amber" id="sv-load">0W</div><div class="saving-label">ACTIVE LOAD</div></div>
+          <div class="saving-item"><div class="saving-val green" id="sv-saved-kwh">0.0</div><div class="saving-label">ENERGY SAVED (kWh)</div></div>
+          <div class="saving-item"><div class="saving-val green" id="sv-saved-usd">₹0.00</div><div class="saving-label">MONEY SAVED TODAY</div></div>
+          <div class="saving-item"><div class="saving-val blue" id="sv-proj">0.0 kWh</div><div class="saving-label">END-OF-DAY PROJECTION</div></div>
+        </div>
+        <div class="appliance-section" style="margin-top:1.2rem">
+          <div class="appliance-header">
+            <div>
+              <div class="card-title">🏠 Live Appliance Manager</div>
+              <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">Toggle to update live load instantly</div>
+            </div>
+            <button class="btn btn-amber btn-sm" onclick="openAddApplianceModal()">+ Add Appliance</button>
+          </div>
+          <div class="appliance-list" id="appliance-list">
+            <div class="empty-state"><div class="icon">🔌</div><p>No appliances added yet</p></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Add Appliance Modal -->
+<div class="modal-overlay" id="add-appliance-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Appliance</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Quick Select</label>
+      <select class="form-input" id="m-app-preset" onchange="updateModalWatts()" style="cursor:pointer;">
+        <option value="">-- Choose Appliance --</option>
+        <optgroup label="Kitchen"><option value="150">Refrigerator</option><option value="1200">Microwave</option><option value="1500">Electric Kettle</option></optgroup>
+        <optgroup label="Climate"><option value="2000">Air Conditioner</option><option value="75">Ceiling Fan</option><option value="1500">Room Heater</option></optgroup>
+        <optgroup label="Tech/Laundry"><option value="1000">Washing Machine</option><option value="60">Smart TV</option><option value="500">Gaming PC</option></optgroup>
+        <option value="0">Custom</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Appliance Name</label><input type="text" class="form-input" id="m-app-name" placeholder="e.g. Air Conditioner"/></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Power (Watts)</label><input type="number" class="form-input" id="m-app-watts" placeholder="1500" min="1"/></div>
+      <div class="form-group"><label class="form-label">Hours/Day</label><input type="number" class="form-input" id="m-app-hours" value="1" min="0.1" max="24" step="0.5"/></div>
+    </div>
+    <div style="display:flex;gap:.8rem;margin-top:.5rem">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-amber" style="flex:1" onclick="saveAppliance()">Add Appliance</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let billCostChart = null;
+let billSplitChart = null;
+
+const State = {
+  system: { rate: 8.5, capacity: 6.0, currency: '₹', location: 'Mumbai', name: 'My Solar System', co2Factor: 0.85 },
+  user: { id: 1, name: "User" },
+  appliances: [],
+  batteryPct: 75,
+  solarKw: 0
+};
+
+const EMOJI_MAP = {
+  fridge:['🧊'],refrigerator:['🧊'],'air conditioner':['❄️'],ac:['❄️'],
+  tv:['📺'],television:['📺'],fan:['🌀'],washer:['🫧'],'washing machine':['🫧'],
+  light:['💡'],heater:['🔥'],pc:['💻'],computer:['💻'],laptop:['💻'],
+  dishwasher:['🍽️'],microwave:['📡'],oven:['🫕'],dryer:['🌀'],pump:['💧'],
+};
+function getApplianceIcon(name) {
+  const k = name.toLowerCase();
+  for (const [key, val] of Object.entries(EMOJI_MAP)) if (k.includes(key)) return val[0];
+  return '🔌';
+}
+
+function loadSavedConfig() {
+  const saved = localStorage.getItem('solar_config');
+  if (saved) {
+    try { Object.assign(State.system, JSON.parse(saved)); } catch(e){}
+    const f = (id, val) => { const el = document.getElementById(id); if(el && val !== undefined) el.value = val; };
+    f('set-rate', State.system.rate);
+    f('set-cap', State.system.capacity);
+    f('set-batt-cap', State.system.batteryCapacity);
+    f('set-location', State.system.location);
+    f('set-currency', State.system.currency);
+    f('set-co2', State.system.co2Factor);
+  }
+}
+loadSavedConfig();
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-' + page.replace('/','-'));
+  if (el) el.classList.add('active');
+  window.history.pushState({}, '', page === 'landing' ? '/' : '/' + page);
+  if (page === 'dashboard') initDashboard();
+  if (page === 'add-appliances') renderOnboardAppliances();
+}
+
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = (type === 'success' ? '✓ ' : '✕ ') + msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+async function doSignup() {
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const pass = document.getElementById('signup-pass').value;
+  if (!name || !email || !pass) return toast('All fields required','error');
+  if (pass.length < 8) return toast('Password min 8 characters','error');
+  try {
+    const r = await fetch('/api/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password:pass})});
+    const d = await r.json();
+    if (!r.ok) return toast(d.error||'Error','error');
+    State.user = d.user; toast("Account created!"); navigate('add-system');
+  } catch { toast('Network error','error'); }
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if (!email || !pass) return toast('Fill all fields','error');
+  try {
+    const r = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const d = await r.json();
+    if (!r.ok) return toast(d.error||'Invalid credentials','error');
+    State.user = d.user;
+    const sr = await fetch(`/api/systems/${d.user.id}`);
+    const sd = await sr.json();
+    if (sd.systems && sd.systems.length) {
+      State.system = { ...State.system, ...sd.systems[0] };
+      const ar = await fetch(`/api/appliances/${d.user.id}`);
+      const ad = await ar.json();
+      State.appliances = ad.appliances || [];
+      toast(`Welcome back, ${d.user.name}!`);
+      navigate('dashboard');
+    } else { navigate('add-system'); }
+  } catch { toast('Network error','error'); }
+}
+
+function doLogout() {
+  State.user = null; State.system = null; State.appliances = [];
+  clearInterval(window._liveTimer); navigate('landing');
+}
+
+async function doAddSystem() {
+  const name = document.getElementById('sys-name').value.trim();
+  const capacity = document.getElementById('sys-capacity').value;
+  const location = document.getElementById('sys-location').value.trim();
+  const rate = document.getElementById('sys-rate').value || '8.50';
+  if (!name || !capacity || !location) return toast('Fill all required fields','error');
+  try {
+    const r = await fetch('/api/systems',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:State.user?.id||1,name,capacity,location,rate})});
+    const d = await r.json();
+    if (!r.ok) return toast(d.error||'Error','error');
+    State.system = {...State.system,...d.system,rate:parseFloat(rate),name,location,capacity:parseFloat(capacity)};
+    toast('System saved!'); navigate('add-appliances');
+  } catch { toast('Network error','error'); }
+}
+
+const onboardList = [];
+function renderOnboardAppliances() {
+  const el = document.getElementById('onboard-appliances');
+  if (!onboardList.length) { el.innerHTML = ''; return; }
+  el.innerHTML = onboardList.map((a,i) => `
+    <div style="display:flex;align-items:center;gap:.8rem;padding:.6rem 0;border-bottom:1px solid var(--border)">
+      <span>${getApplianceIcon(a.name)}</span>
+      <span style="flex:1;font-size:.875rem;font-weight:600">${a.name}</span>
+      <span style="font-family:var(--mono);font-size:.8rem;color:var(--amber)">${a.watts}W · ${a.hoursPerDay}h</span>
+      <span onclick="onboardList.splice(${i},1);renderOnboardAppliances()" style="cursor:pointer;color:var(--muted);font-size:1rem;padding:.2rem .4rem;border-radius:4px;" title="Remove">✕</span>
+    </div>`).join('');
+}
+function addOnboardAppliance() {
+  const name = document.getElementById('oa-name').value.trim();
+  const watts = document.getElementById('oa-watts').value;
+  const hours = document.getElementById('oa-hours').value;
+  if (!name || !watts || !hours) return toast('Fill all appliance fields','error');
+  onboardList.push({name, watts:parseFloat(watts), hoursPerDay:parseFloat(hours)});
+  document.getElementById('oa-name').value='';
+  document.getElementById('oa-watts').value='';
+  document.getElementById('oa-hours').value='';
+  renderOnboardAppliances();
+  toast(`${name} added!`);
+}
+async function finishOnboarding() {
+  if (onboardList.length === 0) { navigate('dashboard'); return; }
+  try {
+    const results = await Promise.all(onboardList.map(app => fetch('/api/appliances',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:State.user?.id||1,...app})}).then(r=>r.json())));
+    State.appliances = results.filter(r=>r.success).map(r=>r.appliance);
+  } catch {}
+  toast('Setup complete!'); navigate('dashboard');
+}
+
+let chartsInit = false;
+function initDashboard() {
+  if (!State.user) return;
+  document.getElementById('user-greeting').textContent = State.user.name || 'User';
+  const sys = State.system;
+  if (sys) {
+    document.getElementById('system-info-sidebar').innerHTML =
+      `<span style="color:var(--amber)">⚡</span> ${sys.name||'My System'}<br><span style="color:var(--green)">${sys.capacity||6} kW</span> · ${sys.location||'—'}`;
+  }
+  updateReportLabels();
+  fetchWeatherWidget();
+  simulateLiveData();
+  clearInterval(window._liveTimer);
+  window._liveTimer = setInterval(simulateLiveData, 4000);
+  if (!chartsInit) {
+    chartsInit = true;
+    setTimeout(() => { buildOverviewChart(); buildForecastChart(); buildReportCharts(); }, 100);
+  }
+  renderDevices();
+  renderApplianceList();
+  updateSavings();
+  updateTimestamp();
+  setInterval(updateTimestamp, 30000);
+}
+
+function updateReportLabels() {
+  const now = new Date();
+  const el1 = document.getElementById('report-date-label');
+  const el2 = document.getElementById('report-sys-label');
+  if (el1) el1.textContent = 'Generated on ' + now.toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'});
+  if (el2) el2.textContent = (State.system?.name || 'My System') + ' · ' + (State.system?.location || '—');
+
+  const rate = State.system?.rate || 8.5;
+  const cap = State.system?.capacity || 6;
+  const annualKwh = (cap * 5.2 * 300).toFixed(0); // 300 sunny days
+  const annualSavings = (parseFloat(annualKwh) * rate).toFixed(0);
+  const co2 = (parseFloat(annualKwh) * (State.system?.co2Factor || 0.85)).toFixed(0);
+
+  setVal('rpt-annual-kwh', annualKwh + ' kWh');
+  setVal('rpt-annual-savings', '₹' + parseInt(annualSavings).toLocaleString('en-IN'));
+  setVal('rpt-co2', co2 + ' kg');
+  setVal('rpt-payback', '~6.2 yrs');
+}
+
+function updateTimestamp() {
+  const now = new Date();
+  const el = document.getElementById('dash-timestamp');
+  if (el) el.textContent = 'Last updated: ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + ' — ' + now.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'});
+}
+
+function simulateLiveData() {
+  const cap = State.system?.capacity || 5;
+  const hour = new Date().getHours();
+  const solarFactor = Math.max(0, Math.sin(Math.PI*(hour-6)/12));
+  State.solarKw = parseFloat(Math.max(0, cap*solarFactor*(0.7+Math.random()*0.3)).toFixed(2));
+  State.batteryPct = Math.min(100, Math.max(15, (State.batteryPct||75) + (State.solarKw>1?0.3:-0.15) + (Math.random()-0.5)*2));
+
+  const activeLoad = State.appliances.filter(a=>a.active).reduce((s,a)=>s+a.watts,0)/1000;
+  const cons = parseFloat((activeLoad||(0.8+Math.random()*0.6)).toFixed(2));
+  const rate = State.system?.rate || 8.5;
+
+  setVal('s-solar', State.solarKw.toFixed(2));
+  setVal('s-battery', Math.round(State.batteryPct));
+  setVal('s-consumption', cons.toFixed(2));
+  setVal('s-solar-trend', `Peak today: ${(State.solarKw*1.2).toFixed(1)} kW`);
+  setVal('s-battery-trend', State.batteryPct < 30 ? '⚠ Low — Charging' : '● Healthy');
+  setVal('s-cons-trend', `Active: ${Math.round(activeLoad*1000)}W`);
+  setVal('s-savings-trend', `Rate: ₹${rate}/kWh`);
+
+  updatePredictions();
+  updateSmartSuggestions();
+  if (State.appliances.length) updateSavings();
+  else {
+    const hoursElapsed = new Date().getHours() + new Date().getMinutes()/60;
+    const energySaved = Math.max(0, (State.solarKw-cons)*(hoursElapsed/24));
+    setVal('s-savings', '₹'+(energySaved*rate).toFixed(2));
+  }
+}
+
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = val; el.classList.remove('count-anim'); void el.offsetWidth; el.classList.add('count-anim'); }
+}
+
+async function fetchWeatherWidget() {
+  const loc = State.system?.location || 'Mumbai';
+  const isHot = ['mumbai','dubai','chennai','delhi','hyderabad'].some(c => loc.toLowerCase().includes(c));
+  const baseTemp = isHot ? 31 : 19;
+  const temp = baseTemp + Math.floor(Math.random()*4);
+  const w = { temp, city:loc, description: temp>28 ? "Clear Sky" : "Scattered Clouds", humidity:62, windSpeed:3.5, icon:"https://openweathermap.org/img/wn/01d@2x.png" };
+  State.weather = w;
+  const widget = document.getElementById('weather-widget');
+  if (widget) widget.innerHTML = `
+    <div class="weather-top">
+      <div class="weather-icon-wrap"><img src="${w.icon}" alt="weather"/></div>
+      <div><div class="weather-temp">${w.temp}°C</div><div class="weather-city">${w.city}</div><div class="weather-desc">${w.description}</div></div>
+    </div>
+    <div class="weather-details">
+      <div class="weather-detail"><div class="wd-label">HUMIDITY</div><div class="wd-val">${w.humidity}%</div></div>
+      <div class="weather-detail"><div class="wd-label">WIND</div><div class="wd-val">${w.windSpeed} m/s</div></div>
+      <div class="weather-detail"><div class="wd-label">SOLAR YIELD</div><div class="wd-val">${w.temp>25?'High ☀️':'Good 🌤'}</div></div>
+      <div class="weather-detail"><div class="wd-label">CONDITION</div><div class="wd-val">Stable</div></div>
+    </div>`;
+}
+
+function updatePredictions() {
+  const cap = State.system?.capacity || 5;
+  const rate = State.system?.rate || 8.5;
+  const yield_ = (cap*0.78*5.2).toFixed(1);
+  const savings = (parseFloat(yield_)*rate).toFixed(2);
+  const eff = Math.round(72+Math.random()*15);
+  setVal('pred-yield', yield_+' kWh');
+  setVal('pred-savings', '₹'+savings);
+  setVal('pred-eff', eff+'%');
+  setVal('pred-peak', '10:00 — 14:00');
+  const yp = document.getElementById('pred-yield-bar'); if(yp) yp.style.width = Math.min(100,parseFloat(yield_)/30*100)+'%';
+  const sp = document.getElementById('pred-savings-bar'); if(sp) sp.style.width = Math.min(100,parseFloat(savings)/500*100)+'%';
+  const ep = document.getElementById('pred-eff-bar'); if(ep) ep.style.width = eff+'%';
+}
+
+function updateSavings() {
+  const totalW = State.appliances.filter(a=>a.active).reduce((s,a)=>s+a.watts,0);
+  const rate = State.system?.rate || 8.5;
+  const cap = State.system?.capacity || 5;
+  const currentHour = new Date().getHours();
+  let totalKwhToday = 0;
+  for (let i=6; i<=currentHour; i++) {
+    totalKwhToday += Math.max(0, Math.sin(Math.PI*(i-6)/12)) * cap * 0.9;
+  }
+  const moneySaved = totalKwhToday * rate;
+  const projKwh = cap * 5.2;
+  const co2Saved = totalKwhToday * (State.system?.co2Factor || 0.85);
+
+  setVal('sv-load', totalW+'W');
+  setVal('sv-saved-kwh', totalKwhToday.toFixed(2));
+  setVal('sv-saved-usd', '₹'+moneySaved.toFixed(2));
+  setVal('sv-proj', projKwh.toFixed(1)+' kWh');
+  setVal('s-savings', '₹'+moneySaved.toFixed(2));
+
+  // Update CO2 banner
+  setVal('co2-display', co2Saved.toFixed(2)+' kg');
+  setVal('trees-display', Math.round(co2Saved/0.021));
+}
+
+function renderDevices() {
+  const cap = State.system?.capacity || 5;
+  document.getElementById('hardware-cards').innerHTML = `
+    <div class="device-card">
+      <div class="device-status"><span class="status-dot online"></span><span class="status-txt online">ONLINE</span></div>
+      <div class="device-name">☀️ Solar Panels</div>
+      <div class="device-metrics">
+        <div class="device-metric"><div class="dm-label">CAPACITY</div><div class="dm-val" style="color:var(--amber)">${cap} kW</div></div>
+        <div class="device-metric"><div class="dm-label">OUTPUT</div><div class="dm-val" id="dv-solar">—</div></div>
+        <div class="device-metric"><div class="dm-label">EFFICIENCY</div><div class="dm-val">87%</div></div>
+        <div class="device-metric"><div class="dm-label">TEMP</div><div class="dm-val">38°C</div></div>
+      </div>
+    </div>
+    <div class="device-card">
+      <div class="device-status"><span class="status-dot online"></span><span class="status-txt online">ONLINE</span></div>
+      <div class="device-name">🔋 Battery Bank</div>
+      <div class="device-metrics">
+        <div class="device-metric"><div class="dm-label">CHARGE</div><div class="dm-val" style="color:var(--green)" id="dv-batt">—</div></div>
+        <div class="device-metric"><div class="dm-label">VOLTAGE</div><div class="dm-val">48.2V</div></div>
+        <div class="device-metric"><div class="dm-label">CYCLES</div><div class="dm-val">412</div></div>
+        <div class="device-metric"><div class="dm-label">HEALTH</div><div class="dm-val">94%</div></div>
+      </div>
+    </div>
+    <div class="device-card">
+      <div class="device-status"><span class="status-dot online"></span><span class="status-txt online">ONLINE</span></div>
+      <div class="device-name">⚙️ Inverter</div>
+      <div class="device-metrics">
+        <div class="device-metric"><div class="dm-label">STATUS</div><div class="dm-val" style="color:var(--green)">Active</div></div>
+        <div class="device-metric"><div class="dm-label">OUTPUT</div><div class="dm-val">230V AC</div></div>
+        <div class="device-metric"><div class="dm-label">LOAD</div><div class="dm-val" id="dv-inv">—</div></div>
+        <div class="device-metric"><div class="dm-label">TEMP</div><div class="dm-val">42°C</div></div>
+      </div>
+    </div>`;
+  setInterval(() => {
+    if (State.solarKw !== undefined) setVal('dv-solar', State.solarKw.toFixed(2)+' kW');
+    if (State.batteryPct !== undefined) setVal('dv-batt', Math.round(State.batteryPct)+'%');
+    const load = State.appliances.filter(a=>a.active).reduce((s,a)=>s+a.watts,0);
+    setVal('dv-inv', load+' W');
+  }, 4000);
+}
+
+function renderApplianceList() {
+  const el = document.getElementById('appliance-list');
+  if (!State.appliances.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🔌</div><p>No appliances yet — add one above</p></div>';
+    return;
+  }
+  el.innerHTML = State.appliances.map(a => `
+    <div class="appliance-item" id="app-item-${a.id}">
+      <div class="app-icon">${getApplianceIcon(a.name)}</div>
+      <div class="app-info">
+        <div class="app-name">${a.name}</div>
+        <div class="app-meta">${a.watts}W · ${a.hoursPerDay}h/day · ${((a.watts*a.hoursPerDay)/1000).toFixed(2)} kWh/day</div>
+      </div>
+      <div class="app-watt ${a.active?'active':'inactive'}">${a.active?a.watts+'W':'OFF'}</div>
+      <label class="toggle-switch">
+        <input type="checkbox" ${a.active?'checked':''} onchange="toggleAppliance(${a.id},this.checked)"/>
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+      <button class="btn-icon" onclick="deleteAppliance(${a.id})" title="Remove">🗑</button>
+    </div>`).join('');
+}
+
+async function toggleAppliance(id, active) {
+  const app = State.appliances.find(a=>a.id===id);
+  if (app) { app.active = active; renderApplianceList(); updateSavings(); }
+  try { await fetch(`/api/appliances/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active})}); } catch {}
+}
+async function deleteAppliance(id) {
+  State.appliances = State.appliances.filter(a=>a.id!==id);
+  renderApplianceList(); updateSavings();
+  try { await fetch(`/api/appliances/${id}`,{method:'DELETE'}); } catch {}
+}
+
+function openAddApplianceModal() { document.getElementById('add-appliance-modal').classList.add('open'); }
+function closeModal() { document.getElementById('add-appliance-modal').classList.remove('open'); }
+
+function saveAppliance() {
+  const name = document.getElementById('m-app-name').value.trim();
+  const watts = parseFloat(document.getElementById('m-app-watts').value);
+  const hours = parseFloat(document.getElementById('m-app-hours').value) || 1;
+  if (!name || isNaN(watts)) return toast("Enter Name and Watts","error");
+  State.appliances.push({id:Date.now(), name, watts, hoursPerDay:hours, active:true});
+  document.getElementById('m-app-name').value='';
+  document.getElementById('m-app-watts').value='';
+  document.getElementById('m-app-hours').value='1';
+  document.getElementById('m-app-preset').value='';
+  closeModal();
+  renderApplianceList();
+  updateSavings();
+  updateSmartSuggestions();
+  toast(`${name} added!`);
+}
+
+function switchTab(tab, event=null) {
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  const btn = document.querySelector(`.sidebar-item[data-tab="${tab}"]`);
+  if (btn) btn.classList.add('active');
+  const panel = document.getElementById(`tab-${tab}`);
+  if (panel) panel.classList.add('active');
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar?.classList.contains('show')) sidebar.classList.remove('show');
+}
+
+/* ── Charts ── */
+const CHART_DEFAULTS = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:{labels:{color:'#334155',font:{family:"'DM Mono'",size:11}}}},
+  scales:{x:{grid:{color:'#f1f5f9'},ticks:{color:'#64748b'}},y:{grid:{color:'#f1f5f9'},ticks:{color:'#64748b'}}}
+};
+function randArr(n,lo,hi){return Array.from({length:n},()=>parseFloat((lo+Math.random()*(hi-lo)).toFixed(2)));}
+
+function buildOverviewChart() {
+  const labels = Array.from({length:24},(_,i)=>`${i}:00`);
+  const solar = Array.from({length:24},(_,i)=>{const f=Math.max(0,Math.sin(Math.PI*(i-6)/12));return parseFloat((5*f*(0.7+Math.random()*.3)).toFixed(2));});
+  new Chart(document.getElementById('overview-chart'),{
+    type:'line',data:{labels,datasets:[
+      {label:'Solar (kW)',data:solar,borderColor:'#F59E0B',backgroundColor:'rgba(245,158,11,.08)',fill:true,tension:.4,pointRadius:2},
+      {label:'Consumption (kW)',data:randArr(24,.5,2.5),borderColor:'#38BDF8',backgroundColor:'rgba(56,189,248,.06)',fill:true,tension:.4,pointRadius:2},
+    ]},options:CHART_DEFAULTS
+  });
+}
+function buildForecastChart() {
+  new Chart(document.getElementById('forecast-chart'),{
+    type:'bar',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[
+      {label:'Predicted (kWh)',data:randArr(7,12,28),backgroundColor:'rgba(245,158,11,.3)',borderColor:'#F59E0B',borderWidth:1.5,borderRadius:4},
+      {label:'Savings (₹)',data:randArr(7,80,250),backgroundColor:'rgba(16,185,129,.3)',borderColor:'#10B981',borderWidth:1.5,borderRadius:4},
+    ]},options:CHART_DEFAULTS
+  });
+}
+function buildReportCharts() {
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  new Chart(document.getElementById('report-chart1'),{
+    type:'bar',data:{labels:months,datasets:[
+      {label:'Generation (kWh)',data:randArr(12,200,450),backgroundColor:'rgba(245,158,11,.25)',borderColor:'#F59E0B',borderWidth:1.5,borderRadius:4},
+      {label:'Consumption (kWh)',data:randArr(12,100,300),backgroundColor:'rgba(56,189,248,.2)',borderColor:'#38BDF8',borderWidth:1.5,borderRadius:4},
+    ]},options:CHART_DEFAULTS
+  });
+  new Chart(document.getElementById('report-chart2'),{
+    type:'line',data:{labels:months,datasets:[{label:'Savings (₹)',data:randArr(12,500,3000),borderColor:'#10B981',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.4}]},
+    options:CHART_DEFAULTS
+  });
+}
+
+/* ── DOWNLOAD REPORT (Charts only) ── */
+async function downloadReportOnly() {
+  const region = document.getElementById('report-capture-region');
+  if (!region) return;
+  toast('Generating report image...','success');
+  try {
+    const canvas = await html2canvas(region, { backgroundColor:'#F5F7FA', scale:2, logging:false, useCORS:true });
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = `SolarIQ_Report_${new Date().toISOString().split('T')[0]}.png`;
+    link.click();
+    toast('Report downloaded!');
+  } catch(e) { toast('Download failed','error'); console.error(e); }
+}
+
+/* ── BILL COMPARISON ── */
+function processBillData() {
+  const oldBill = parseFloat(document.getElementById('manual-old-amt').value);
+  if (!oldBill || oldBill <= 0) return toast("Enter a valid bill amount","error");
+  const investment = parseFloat(document.getElementById('investment-amt').value) || 0;
+
+  const solarBill = oldBill * 0.20;
+  const savings = oldBill - solarBill;
+  const annualSavings = savings * 12;
+  const payback = investment > 0 ? (investment / annualSavings).toFixed(1) + ' years' : 'N/A';
+
+  // Update summary boxes
+  setVal('bill-old-display', '₹'+oldBill.toLocaleString('en-IN'));
+  setVal('bill-new-display', '₹'+solarBill.toLocaleString('en-IN'));
+  setVal('bill-saving-display', '₹'+savings.toLocaleString('en-IN'));
+  setVal('bill-annual', '₹'+annualSavings.toLocaleString('en-IN'));
+  setVal('bill-payback', payback);
+  setVal('bill-result-savings', '₹'+savings.toFixed(2));
+  setVal('bill-result-percent', '80% Reduction Achieved');
+
+  // Update header labels
+  const now = new Date();
+  setVal('bill-date-label', now.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}));
+  setVal('bill-loc-label', State.system?.location || 'India');
+
+  // Show extra stats
+  document.getElementById('bill-extra-stats').style.display = 'grid';
+
+  // Charts
+  const ctxCost = document.getElementById('billCostChart').getContext('2d');
+  const ctxSplit = document.getElementById('billSplitChart').getContext('2d');
+  if (billCostChart) billCostChart.destroy();
+  if (billSplitChart) billSplitChart.destroy();
+
+  billCostChart = new Chart(ctxCost,{
+    type:'bar',
+    data:{labels:['Legacy Grid','With SolarIQ'],datasets:[{label:'Monthly Cost (₹)',data:[oldBill,solarBill],backgroundColor:['#94A3B8','#F59E0B'],borderRadius:8,borderSkipped:false}]},
+    options:{...CHART_DEFAULTS,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'₹'+ctx.raw.toLocaleString('en-IN')}}}}
+  });
+
+  billSplitChart = new Chart(ctxSplit,{
+    type:'doughnut',
+    data:{labels:['Grid Cost Remaining','Solar Savings'],datasets:[{data:[solarBill,savings],backgroundColor:['#E2E8F0','#10B981'],borderWidth:0}]},
+    options:{...CHART_DEFAULTS,cutout:'72%',scales:{x:{display:false},y:{display:false}},plugins:{legend:{position:'bottom',labels:{color:'#64748b',font:{size:11}}}}}
+  });
+
+  toast("Bill comparison generated!");
+}
+
+/* ── DOWNLOAD BILL REPORT ── */
+async function downloadBillReport() {
+  const oldBill = parseFloat(document.getElementById('manual-old-amt').value);
+  if (!oldBill) return toast("Generate a bill comparison first","error");
+  const region = document.getElementById('bill-capture-region');
+  toast('Generating bill report...','success');
+  try {
+    const canvas = await html2canvas(region, {backgroundColor:'#ffffff', scale:2, logging:false, useCORS:true});
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = `SolarIQ_BillReport_${new Date().toISOString().split('T')[0]}.png`;
+    link.click();
+    toast('Bill report downloaded!');
+  } catch(e) { toast('Download failed','error'); console.error(e); }
+}
+
+/* ── AI Bill Scanner (OCR) ── */
+async function handleBillUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const status = document.getElementById('ocr-status');
+  status.textContent = "🔍 Scanning document...";
+  toast("Analyzing with AI Vision...","success");
+  try {
+    const result = await Tesseract.recognize(file,'eng');
+    const text = result.data.text;
+    const allNumbers = text.match(/\d{1,3}(?:,\d{3})*(?:\.\d{2})?|\d+\.\d{2}/g);
+    let detectedAmt = null;
+    if (allNumbers) {
+      const filtered = allNumbers.map(n=>parseFloat(n.replace(/,/g,''))).filter(n=>n>200&&n<20000);
+      if (filtered.length) detectedAmt = Math.max(...filtered);
+    }
+    if (detectedAmt) {
+      document.getElementById('manual-old-amt').value = detectedAmt;
+      processBillData();
+      status.textContent = `✅ Detected: ₹${detectedAmt}`;
+      toast("Amount extracted: ₹"+detectedAmt);
+    } else {
+      status.textContent = "⚠ Could not detect amount — please type manually.";
+      toast("Could not detect amount","error");
+    }
+  } catch(e) { status.textContent = "❌ OCR Error"; toast("Vision error","error"); }
+}
+function saveAllSettings() {
+  const rate = parseFloat(document.getElementById('set-rate').value);
+  const cap = parseFloat(document.getElementById('set-cap').value);
+  const batt = parseFloat(document.getElementById('set-batt-cap').value);
+  const co2 = parseFloat(document.getElementById('set-co2').value);
+  const loc = document.getElementById('set-location').value;
+  const currency = document.getElementById('set-currency').value;
+  if (isNaN(rate)||isNaN(cap)) return toast('Fill all values','error');
+  Object.assign(State.system, {rate,capacity:cap,batteryCapacity:batt,co2Factor:co2,location:loc,currency});
+  localStorage.setItem('solar_config', JSON.stringify(State.system));
+  updateSavings(); fetchWeatherWidget(); updateSmartSuggestions(); updateReportLabels();
+  toast(`Saved! Optimized for ${loc}.`);
+  setTimeout(()=>switchTab('overview'),800);
+}
+
+function updateModalWatts() {
+  const preset = document.getElementById('m-app-preset');
+  const nameInput = document.getElementById('m-app-name');
+  const wattsInput = document.getElementById('m-app-watts');
+  if (preset.value && preset.value !== "0") {
+    nameInput.value = preset.options[preset.selectedIndex].text;
+    wattsInput.value = preset.value;
+  } else if (preset.value === "0") { nameInput.value=''; wattsInput.value=''; nameInput.focus(); }
+}
+function updateOnboardWatts() {
+  const select = document.getElementById('oa-preset');
+  const nameInput = document.getElementById('oa-name');
+  const wattInput = document.getElementById('oa-watts');
+  if (select?.value && select.value !== "0") {
+    wattInput.value = select.value;
+    nameInput.value = select.options[select.selectedIndex].text;
+  } else if (select?.value === "0") { nameInput.value=''; wattInput.value=''; nameInput.focus(); }
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+document.querySelectorAll('.sidebar-item').forEach(item => {
+  item.addEventListener('click', () => document.getElementById('sidebar').classList.remove('show'));
+});
+
+function updateSmartSuggestions() {
+  const hintEl = document.getElementById('smart-ai-hint');
+  if (!hintEl) return;
+  const gen = State.solarKw || 0;
+  const load = State.appliances.filter(a=>a.active).reduce((s,a)=>s+a.watts,0)/1000;
+  const offApp = State.appliances.find(a=>!a.active);
+  if (gen > (load+0.5) && gen > 1) {
+    hintEl.innerHTML = `☀️ <b>Surplus Power:</b> You have extra solar! ${offApp?'Run the <b>'+offApp.name+'</b> now for free.':'Battery is charging at full speed.'}`;
+    hintEl.style.borderColor = "var(--green)"; hintEl.style.background = "#f0fff4";
+  } else if (gen < load && load > 2) {
+    hintEl.innerHTML = `⚡ <b>High Load Alert:</b> Consuming more than generating. Pause heavy appliances to save battery.`;
+    hintEl.style.borderColor = "var(--amber)"; hintEl.style.background = "#fffbeb";
+  } else if (gen === 0) {
+    hintEl.innerHTML = `🌙 <b>Night Mode:</b> Running on battery. Conserve energy for essentials.`;
+    hintEl.style.borderColor = "#cbd5e1"; hintEl.style.background = "#f8fafc";
+  } else {
+    hintEl.innerHTML = `✨ <b>Optimized:</b> Production and consumption are well-balanced. Great efficiency!`;
+    hintEl.style.borderColor = "var(--blue)"; hintEl.style.background = "#eff6ff";
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+window.addEventListener('DOMContentLoaded', () => {
+  const path = window.location.pathname.replace('/','') || 'landing';
+  navigate(path);
+  window.addEventListener('popstate', () => {
+    const p = window.location.pathname.replace('/','') || 'landing';
+    navigate(p);
+  });
+});
+</script>
+</body>
+</html>
